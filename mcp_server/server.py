@@ -20,6 +20,12 @@ from typing import Any, Optional
 # MCP 2.x SDK
 from mcp.server.mcpserver import MCPServer
 
+# Starlette for health endpoint + routing
+from starlette.applications import Starlette
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from starlette.routing import Mount, Route
+
 from context_loader import (
     load_all_context_files,
     load_context_file,
@@ -42,7 +48,7 @@ logger = logging.getLogger("mock_lumen_mcp")
 mcp = MCPServer(
     name="mock-lumen-mcp-poc",
     description=(
-        "⚠️ POC NOTICE: This is a demonstration MCP server for the mock-lumen-mcp-poc project. "
+        "POC NOTICE: This is a demonstration MCP server for the mock-lumen-mcp-poc project. "
         "It is NOT the official Lumen service. "
         "The context files describe a Todo List web application built as a proof of concept."
     ),
@@ -64,7 +70,7 @@ logger.info("Mock Lumen MCP server initialized (POC, MCP 2.x)")
     description=(
         "Retrieve application context from the repository's .github/instructions files. "
         "Covers architecture, repository structure, implementation details, and API design. "
-        "⚠️ POC: This is a mock Lumen server, not the official Lumen service."
+        "POC: This is a mock Lumen server, not the official Lumen service."
     )
 )
 def get_application_context(
@@ -107,7 +113,7 @@ def get_application_context(
         if ctx.get("found"):
             response["content"] = ctx["content"]
         else:
-            response["error"] = ctx.get("error")
+            response["not_found"] = ctx.get("error")
             response["message"] = "Section not found. Check 'available_sections' for valid keys."
         return response
 
@@ -136,7 +142,7 @@ def get_application_context(
     description=(
         "Retrieve business domain information for the Todo List application: "
         "entities, workflows, capabilities, and business rules. "
-        "⚠️ POC: This is a mock Lumen server, not the official Lumen service."
+        "POC: This is a mock Lumen server, not the official Lumen service."
     )
 )
 def get_business_context() -> dict[str, Any]:
@@ -163,7 +169,7 @@ def get_business_context() -> dict[str, Any]:
     return {
         "tool": "get_business_context",
         "poc_notice": (
-            "⚠️ This is a mock Lumen MCP server (POC). "
+            "This is a mock Lumen MCP server (POC). "
             "Business context describes the Todo List demonstration application only. "
             "This is NOT approved corporate business documentation."
         ),
@@ -183,7 +189,7 @@ def get_business_context() -> dict[str, Any]:
 @mcp.tool(
     description=(
         "Retrieve documented policies, constraints, and standards for the Todo List POC. "
-        "⚠️ POC ONLY: This is mock documentation – NOT approved corporate compliance guidance or legal advice."
+        "POC ONLY: This is mock documentation - NOT approved corporate compliance guidance or legal advice."
     )
 )
 def get_compliance_context() -> dict[str, Any]:
@@ -210,7 +216,7 @@ def get_compliance_context() -> dict[str, Any]:
     return {
         "tool": "get_compliance_context",
         "compliance_disclaimer": (
-            "⚠️ IMPORTANT: This is mock POC documentation for a demonstration application. "
+            "IMPORTANT: This is mock POC documentation for a demonstration application. "
             "It is NOT approved corporate compliance guidance, legal advice, or official "
             "security policy. Do not use this as a basis for production compliance decisions."
         ),
@@ -229,7 +235,7 @@ def get_compliance_context() -> dict[str, Any]:
     description=(
         "Report when the context files were last generated or updated. "
         "Returns ISO 8601 timestamps and version/commit information if available. "
-        "Note: server startup time ≠ context generation time."
+        "Note: server startup time is not the same as context generation time."
     )
 )
 def get_context_freshness() -> dict[str, Any]:
@@ -244,11 +250,38 @@ def get_context_freshness() -> dict[str, Any]:
     return {
         "tool": "get_context_freshness",
         "poc_notice": (
-            "⚠️ This is a mock Lumen MCP server (POC). "
+            "This is a mock Lumen MCP server (POC). "
             "Freshness data reflects context file modification times, not production data pipelines."
         ),
         **freshness,
     }
+
+
+# ---------------------------------------------------------------------------
+# Health endpoint (Starlette)
+# ---------------------------------------------------------------------------
+
+async def health(request: Request) -> JSONResponse:
+    """Simple health check endpoint required by Render.com and Copilot Studio."""
+    return JSONResponse({
+        "status": "ok",
+        "service": "mock-lumen-mcp-poc",
+        "transport": "streamable-http",
+        "mcp_endpoint": "/mcp",
+        "poc_notice": "This is a demonstration MCP server (POC), not the official Lumen service.",
+    })
+
+
+def build_app():
+    """Build the combined Starlette application with health + MCP routes."""
+    mcp_app = mcp.streamable_http_app()
+
+    return Starlette(
+        routes=[
+            Route("/health", endpoint=health, methods=["GET"]),
+            Mount("/", app=mcp_app),
+        ]
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -257,6 +290,7 @@ def get_context_freshness() -> dict[str, Any]:
 
 def main():
     import argparse
+    import uvicorn
 
     parser = argparse.ArgumentParser(description="Mock Lumen MCP Server (POC)")
     parser.add_argument(
@@ -277,9 +311,8 @@ def main():
     if args.transport == "stdio":
         asyncio.run(mcp.run_stdio_async())
     else:
-        asyncio.run(
-            mcp.run_streamable_http_async(host=args.host, port=args.port)
-        )
+        app = build_app()
+        uvicorn.run(app, host=args.host, port=args.port)
 
 
 if __name__ == "__main__":
