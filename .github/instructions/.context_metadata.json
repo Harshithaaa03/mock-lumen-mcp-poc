@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-10-15T16:17:54.389589+00:00",
+  "generator": "scripts/generate_context_metadata.py",
+  "git_commit": "0eed7eef5bc8a29cf58adfc35221a2e9865742c3",
+  "context_format_version": "1.0.0-poc",
+  "poc_notice": "This metadata is part of the mock-lumen-mcp-poc project. It is NOT an official Lumen artifact.",
+  "file_checksums": {
+    "architecture.instructions.md": "791ab10bd1c17e2c0020efcbff7c407fbbc9b7f840a6a67b635b62b8ba7d1ea6",
+    "context.instructions.md": "8ae80bae9906396633cac263ed5e4d276636a9f98bc6d0491dad26a234a3a025",
+    "instruction.instructions.md": "6c91c7f55cdd5c24855e3c07dc943d76af82835b94d0bee4bf336ad526b9902d",
+    "ontology.instructions.md": "084a4e081287babd828296a96bad1dd46f88541eed5bb3a4cdb74ee6a03e5a5f",
+    "policies.instructions.md": "9efbf4d95e30822c21b2cad99f7645ae8430e31c15bca728fdfda038eb582bcf",
+    "README.instructions.md": "523b34154d94e84f645ddd090ad72df020151039fc552eff355ce7c7b55d2842",
+    "rules.instructions.md": "ed238b222d2b3964ec02adce50a75a5fb9d82a8c2488d7bc50281d18c8e2573e",
+    "standards.instructions.md": "4707daa8609a63a314c45a7aa50b3dcae6c579f9b26f862d33bbfa116981d293"
+  },
+  "total_files_expected": 8,
+  "total_files_found": 8,
+  "missing_files": []
+}
